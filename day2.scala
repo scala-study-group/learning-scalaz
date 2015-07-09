@@ -1,4 +1,4 @@
-package day2 {
+package day2
 
 import scala.language.implicitConversions // eyeroll
 import scala.language.higherKinds
@@ -90,4 +90,3 @@ object Main extends App {
 
 }
 
-}
