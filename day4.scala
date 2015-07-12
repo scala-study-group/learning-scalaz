@@ -18,7 +18,7 @@ case class Few[A](a: A, b: A, c: A) extends Amount[A]
 
 object Amount {
 
-  implicit def equal[A]: Equal[Amount[A]] =
+  implicit def equal[A: Equal]: Equal[Amount[A]] =
     new Equal[Amount[A]] {
       def equal(a: Amount[A], b: Amount[A]): Boolean = a == b
     }
@@ -36,25 +36,25 @@ object Amount {
 
   implicit val applicative: Applicative[Amount] =
     new Applicative[Amount] {
-      def point[A](a: => A): Amount[A] = One(a)
+      def point[A](a: => A): Amount[A] = Few(a, a, a)
       def ap[A, B](fa: => Amount[A])(f: => Amount[A => B]): Amount[B] =
         fa match {
           case One(a) =>
             f match {
-              case One(g) => One(g(a))
+              case One(g)       => One(g(a))
               case Couple(g, _) => One(g(a))
               case Few(g, _, _) => One(g(a))
             }
           case Couple(a, b) =>
             f match {
-              case One(g) => Couple(g(a), g(b))
-              case Couple(g, _) => Couple(g(a), g(b))
-              case Few(g, _, _) => Couple(g(a), g(b))
+              case One(g)       => One(g(a))
+              case Couple(g, h) => Couple(g(a), h(b))
+              case Few(g, h, _) => Couple(g(a), h(b))
             }
           case Few(a, b, c) =>
             f match {
-              case One(g) => Few(g(a), g(b), g(c))
-              case Couple(g, _) => Few(g(a), g(b), g(c))
+              case One(g)       => One(g(a))
+              case Couple(g, h) => Couple(g(a), h(b))
               case Few(g, h, i) => Few(g(a), h(b), i(c))
             }
         }
@@ -62,9 +62,9 @@ object Amount {
 
     val genAmountInt: Gen[Amount[Int]]=
       for {
-        x <- Gen.choose(-100,100)
-        y <- Gen.choose(-100,100)
-        z <- Gen.choose(-100,100)
+        x <- Arbitrary.arbitrary[Int]
+        y <- Arbitrary.arbitrary[Int]
+        z <- Arbitrary.arbitrary[Int]
         a <- Gen.oneOf(One(x), Couple(x,y), Few(x,y,z))
       } yield a
 
