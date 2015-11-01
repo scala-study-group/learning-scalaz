@@ -51,18 +51,24 @@ object ReaderOptionEx {
 object ReaderTEx {
 
   import Kleisli.kleisli
+  import Kleisli.kleisliMonadTrans
   def ReaderT[V[_],T,U] = kleisli[V, T, U](_)
 
   val timesTwo: ReaderT[Option,Int,Int] =
     kleisli { x: Int => Some(x * 2) }
 
-  val plusTen: ReaderT[Option,Int,Int] =
-    ReaderT { x: Int => Some(x + 10) }
+  val plusTen: Reader[Int,Int] =
+    Reader { x: Int => x + 10 }
+
+  val idToOption: Id ~> Option =
+    new NaturalTransformation[Id, Option] {
+      def apply[A](fa: Id[A]): Option[A] = Some(fa)
+    }
 
   val addStuff: ReaderT[Option,Int,Int] =
     for {
       a <- timesTwo
-      b <- plusTen
+      b <- kleisliMonadTrans.hoist(idToOption).apply(plusTen)
       c  = a + b
     } yield c
 
@@ -156,10 +162,12 @@ case class MyReaderT[F[_],E,A](run: E => F[A]) {
 
 object MyReaderT {
 
-  def hoist[M[_],N[_],E](f: M ~> N):
-    ({ type X[Y] = MyReaderT[M,E,Y]})#X ~> ({ type W[Y] = MyReaderT[N,E,Y]})#W =
-      new NaturalTransformation[({ type X[Y] = MyReaderT[M,E,Y]})#X,
-                                ({ type W[Y] = MyReaderT[N,E,Y]})#W] {
+  class MyReaderTFE[F[_],E]() {
+    type X[A] = MyReaderT[F,E,A]
+  }
+
+  def hoist[M[_],N[_],E](f: M ~> N): MyReaderTFE[M,E]#X ~> MyReaderTFE[N,E]#X =
+      new NaturalTransformation[MyReaderTFE[M,E]#X, MyReaderTFE[N,E]#X] {
         def apply[A](rm: MyReaderT[M,E,A]): MyReaderT[N,E,A] =
           MyReaderT(e => f(rm.run(e)))
       }
