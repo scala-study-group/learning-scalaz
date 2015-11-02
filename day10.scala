@@ -163,10 +163,10 @@ case class MyReaderT[F[_],E,A](run: E => F[A]) {
 object MyReaderT {
 
   def hoist[M[_],N[_],E](f: M ~> N): MyReaderT[M,E,?] ~> MyReaderT[N,E,?] =
-      new NaturalTransformation[MyReaderT[M,E,?], MyReaderT[N,E,?]] {
-        def apply[A](rm: MyReaderT[M,E,A]): MyReaderT[N,E,A] =
-          MyReaderT(e => f(rm.run(e)))
-      }
+    new NaturalTransformation[MyReaderT[M,E,?], MyReaderT[N,E,?]] {
+      def apply[A](rm: MyReaderT[M,E,A]): MyReaderT[N,E,A] =
+        MyReaderT(e => f(rm.run(e)))
+    }
 
 }
 
