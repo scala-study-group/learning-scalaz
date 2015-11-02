@@ -8,34 +8,34 @@ import Scalaz._
 
 object ReaderEx {
 
-  val timesTwo: Reader[Int,Int] =
-    Reader { x: Int => x * 2 }
+  val halve: Reader[Int,Int] =
+    Reader { x: Int => x / 2 }
 
   val plusTen: Reader[Int,Int] =
     Reader { x: Int => x + 10 }
 
   val addStuff: Reader[Int,Int] =
     for {
-      a <- timesTwo
+      a <- halve
       b <- plusTen
       c  = a + b
     } yield c
 
-  val x: Int = addStuff.run(3) // 19
+  val x: Int = addStuff.run(4) // 16
 
 }
 
 object ReaderOptionEx {
 
-  val timesTwo: Reader[Int,Option[Int]] =
-    Reader { x: Int => Some(x * 2) }
+  val halve: Reader[Int,Option[Int]] =
+    Reader { x: Int => if (x % 2 == 1) None else Some(x / 2) }
 
   val plusTen: Reader[Int,Option[Int]] =
     Reader { x: Int => Some(x + 10) }
 
   val addStuff: Reader[Int,Option[Int]] =
     for {
-      ao <- timesTwo
+      ao <- halve
       bo <- plusTen
       co  = for {
               a <- ao
@@ -44,7 +44,7 @@ object ReaderOptionEx {
             } yield c
     } yield co
 
-  val xo: Option[Int] = addStuff.run(3) // Some(19)
+  val xo: Option[Int] = addStuff.run(4) // Some(16)
 
 }
 
@@ -54,8 +54,8 @@ object ReaderTEx {
   import Kleisli.kleisliMonadTrans
   def ReaderT[V[_],T,U] = kleisli[V, T, U](_)
 
-  val timesTwo: ReaderT[Option,Int,Int] =
-    kleisli { x: Int => Some(x * 2) }
+  val halve: ReaderT[Option,Int,Int] =
+    kleisli { x: Int => if (x % 2 == 1) None else Some(x / 2) }
 
   val plusTen: Reader[Int,Int] =
     Reader { x: Int => x + 10 }
@@ -67,12 +67,12 @@ object ReaderTEx {
 
   val addStuff: ReaderT[Option,Int,Int] =
     for {
-      a <- timesTwo
+      a <- halve
       b <- kleisliMonadTrans.hoist(idToOption).apply(plusTen)
       c  = a + b
     } yield c
 
-  val xo: Option[Int] = addStuff.run(3) // Some(19)
+  val xo: Option[Int] = addStuff.run(4) // Some(16)
 
 }
 
@@ -85,20 +85,20 @@ case class MyReader[E,A](run: E => A) {
 
 object MyReaderEx {
 
-  val timesTwo: MyReader[Int,Int] =
-    MyReader { x: Int => x * 2 }
+  val halve: MyReader[Int,Int] =
+    MyReader { x: Int => x / 2 }
 
   val plusTen: MyReader[Int,Int] =
     MyReader { x: Int => x + 10 }
 
   val addStuff: MyReader[Int,Int] =
     for {
-      a <- timesTwo
+      a <- halve
       b <- plusTen
       c  = a + b
     } yield c
 
-  val x: Int = addStuff.run(3) // 19
+  val x: Int = addStuff.run(4) // 16
 
 }
 
@@ -132,15 +132,15 @@ case object MyNone extends MyOption[Nothing]
 
 object MyReaderMyOptionEx {
 
-  val timesTwo: MyReader[Int,MyOption[Int]] =
-    MyReader { x: Int => MySome(x * 2) }
+  val halve: MyReader[Int,MyOption[Int]] =
+    MyReader { x: Int => if (x % 2 == 1) MyNone else MySome(x / 2) }
 
   val plusTen: MyReader[Int,MyOption[Int]] =
     MyReader { x: Int => MySome(x + 10) }
 
   val addStuff: MyReader[Int,MyOption[Int]] =
     for {
-      ao <- timesTwo
+      ao <- halve
       bo <- plusTen
       co  = for {
               a <- ao
@@ -149,7 +149,7 @@ object MyReaderMyOptionEx {
             } yield c
     } yield co
 
-  val xo: MyOption[Int] = addStuff.run(3) // MySome(19)
+  val xo: MyOption[Int] = addStuff.run(4) // MySome(16)
 
 }
 
@@ -172,8 +172,8 @@ object MyReaderT {
 
 object MyReaderTEx {
 
-  val timesTwo: MyReaderT[MyOption,Int,Int] =
-    MyReaderT { x: Int => MySome(x * 2) }
+  val halve: MyReaderT[MyOption,Int,Int] =
+    MyReaderT { x: Int => if (x % 2 == 1) MyNone else MySome(x / 2) }
 
   val plusTen: MyReaderT[Id,Int,Int] =
     MyReaderT[Id,Int,Int] { x: Int => x + 10 }
@@ -185,12 +185,12 @@ object MyReaderTEx {
 
   val addStuff: MyReaderT[MyOption,Int,Int] =
     for {
-      a <- timesTwo
+      a <- halve
       b <- MyReaderT.hoist(idToMyOption).apply(plusTen)
       c  = a + b
     } yield c
 
-  val xo: MyOption[Int] = addStuff.run(3) // MySome(19)
+  val xo: MyOption[Int] = addStuff.run(4) // MySome(16)
 
 }
 
@@ -201,29 +201,29 @@ object Main extends App {
   // Scalaz Reader
 
   println("Reader example")
-  println(ReaderEx.x) // 19
+  println(ReaderEx.x) // 16
   println()
 
   println("ReaderOption example")
-  println(ReaderOptionEx.xo) // Some(19)
+  println(ReaderOptionEx.xo) // Some(16)
   println()
 
   println("ReaderT example")
-  println(ReaderTEx.xo) // Some(19)
+  println(ReaderTEx.xo) // Some(16)
   println()
 
   // My Reader
 
   println("MyReader example")
-  println(MyReaderEx.x) // 19
+  println(MyReaderEx.x) // 16
   println()
 
   println("MyReaderMyOption example")
-  println(MyReaderMyOptionEx.xo) // Some(19)
+  println(MyReaderMyOptionEx.xo) // Some(16)
   println()
 
   println("MyReaderT example")
-  println(MyReaderTEx.xo) // Some(19)
+  println(MyReaderTEx.xo) // Some(16)
   println()
 
 }
