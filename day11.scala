@@ -27,11 +27,6 @@ object MonocleEx {
   //
   // (_company ^|-> _address ^|-> _street ^|-> _name).modify(_.capitalize)(employee)
 
-  val street = Street("main st.")
-  val address = Address(street)
-  val company = Company("The Very Big Corporation", address)
-  val employee = Employee("Bob Worker", company)
-
   val companyAddress: Lens[Company, Address] =
     Lens.lensu[Company, Address] (
       (a, value) => a.copy(address = value),
@@ -53,17 +48,17 @@ object MonocleEx {
   val companyStreetName: Lens[Company, String] =
     companyAddress >=> addressStreet >=> streetName
 
-  val company2: Company =
-    companyStreetName mod(_.capitalize, company)
+  val capitalizeStreetName1: Company => Company =
+    company => companyStreetName mod(_.capitalize, company)
 
-  val company3: Company =
-    companyStreetName =>= { _.capitalize } apply company
+  val capitalizeStreetName2: Company => Company =
+    companyStreetName =>= { _.capitalize }
 
-  val company4: (Company, String) =
-    (companyStreetName %= { x: String => x.capitalize }) run company
+  val capitalizeStreetName3: State[Company, String] =
+    (companyStreetName %= { x: String => x.capitalize })
 
-  val company5: Company =
-    companyStreetName set(company, "Somewhere Else Pl.")
+  val moveCompany: Company => Company =
+    company => companyStreetName set(company, "Somewhere Else Pl.")
 
 }
 
@@ -73,31 +68,32 @@ object Main extends App {
 
   {
     import MonocleEx._
+
+    val street = Street("main st.")
+    val address = Address(street)
+    val company = Company("The Very Big Corporation", address)
+    val employee = Employee("Bob Worker", company)
+
     println("companyStreetName get company:")
     println(companyStreetName get company) // main st.
     println()
 
-    println("companyStreetName get company2:")
-    println(companyStreetName get company2) // Main st.
+    println("companyStreetName get capitalizeStreetName1(company):")
+    println(companyStreetName get capitalizeStreetName1(company)) // Main st.
     println()
 
-    println("companyStreetName get company3:")
-    println(companyStreetName get company3) // Main st.
+    println("companyStreetName get capitalizeStreetName2(company):")
+    println(companyStreetName get capitalizeStreetName2(company)) // Main st.
     println()
 
-    println("company4:")
-    println(company4) // (
-                      //   Company(
-                      //     The Very Big Corporation,
-                      //     Address(Street(Main st.))
-                      //   ),
-                      //   Main st.
-                      // )
+    println("companyStreetName get (capitalizeStreetName3 run company)._1:")
+    println(companyStreetName get (capitalizeStreetName3 run company)._1) // Main st.
     println()
 
-    println("companyStreetName get company5:")
-    println(companyStreetName get company5) // Somewhere Else Pl.
+    println("companyStreetName get moveCompany(company):")
+    println(companyStreetName get moveCompany(company)) // Somewhere Else Pl.
     println()
+
   }
 
 }
