@@ -62,6 +62,41 @@ object MonocleEx {
 
 }
 
+object MapLensesEx {
+
+  case class Id(value: String)
+  case class User(name: String, email: String)
+
+  type Users = Map[Id, User]
+
+  def user(id: Id): Lens[Users, Option[User]] =
+    Lens.lensu[Users, Option[User]] (
+      (users, userO) => userO match {
+        case Some(user) => users + (id -> user)
+        case None => users - id
+      },
+      _.get(id)
+    )
+
+  val email: Lens[User, String] =
+    Lens.lensu[User, String] (
+      (user, email) => user.copy(email = email),
+      _.email
+    )
+
+  // def somePLens[A]: PLens[Option[A], A] = PLensFamily.somePLens
+
+  def somePLens[A]: PLens[Option[A], A] =
+    Lens.lensu[Option[A], A] (
+      (x, y) => Some(y),
+      _.get
+    ).partial
+
+  def userEmail(id: Id): PLens[Users, String] =
+    user(id).partial >=> somePLens >=> email.partial
+
+}
+
 object Main extends App {
 
   println()
@@ -92,6 +127,19 @@ object Main extends App {
 
     println("companyStreetName get moveCompany(company):")
     println(companyStreetName get moveCompany(company)) // Somewhere Else Pl.
+    println()
+
+  }
+
+  {
+    import MapLensesEx._
+
+    val users = Map(
+      Id("1") -> User("Foo Bar", "foo@bar"),
+      Id("2") -> User("Baz Raz", "baz@raz")
+    )
+
+    println(userEmail(Id("2")) get users)
     println()
 
   }
