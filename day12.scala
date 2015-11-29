@@ -93,4 +93,17 @@ object Origami extends App {
 
   println(isort(Cons(4,Cons(3,Cons(2,Cons(1, Nil))))))
 
+  ////////////////////////////////////////////////////////////////////
+  // Unfolds
+
+  sealed trait Maybe[+A]
+  case class Just[A](x: A) extends Maybe[A]
+  case object Nada extends Maybe[Nothing]
+
+  def unfoldL[A,B](f: B => Maybe[(A,B)], z: B): List[A] =
+    f(z) match {
+      case Nada => Nil
+      case Just((x,v)) => Cons(x, unfoldL(f,v))
+    }
+
 }
