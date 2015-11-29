@@ -106,4 +106,23 @@ object Origami extends App {
       case Just((x,v)) => Cons(x, unfoldL(f,v))
     }
 
+  trait Enum[A] {
+    def succ(x: A): A
+    def pred(x: A): A
+  }
+
+  def range[A: Ord: Enum](from: A, to: A): List[A] = {
+    def f(x: A): Maybe[(A, A)] =
+      if (implicitly[Ord[A]].compare(to, x) == LT) Nada
+      else Just((x, implicitly[Enum[A]].succ(x)))
+    unfoldL(f, from)
+  }
+
+  implicit object IntEnum extends Enum[Int] {
+    def succ(x: Int): Int = x + 1
+    def pred(x: Int): Int = x - 1
+  }
+
+  println(range(1,10))
+
 }
