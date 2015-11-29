@@ -60,4 +60,37 @@ object Origami extends App {
     def concat: List[A] = concatL(xss)
   }
 
+  ////////////////////////////////////////////////////////////////////
+  // Exercise 3.3
+
+  sealed trait Ordering
+  case object GT extends Ordering
+  case object LT extends Ordering
+  case object EQ extends Ordering
+
+  trait Ord[A] {
+    def compare(x: A, y: A): Ordering
+  }
+
+  def isort[A : Ord](xs: List[A]): List[A] = {
+    def insert(x: A)(xs: List[A]): List[A] =
+      xs match {
+        case Nil => wrap(x)
+        case Cons(h, t) if implicitly[Ord[A]].compare(x, h) == LT =>
+          Cons(x, Cons(h, t))
+        case Cons(h, t) =>
+          Cons(h, insert(x)(t))
+      }
+    foldL(insert, Nil, xs)
+  }
+
+  implicit object IntOrd extends Ord[Int] {
+    def compare(x: Int, y: Int) =
+      if (x < y) LT
+      else if (x > y) GT
+      else EQ
+  }
+
+  println(isort(Cons(4,Cons(3,Cons(2,Cons(1, Nil))))))
+
 }
