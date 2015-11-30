@@ -111,12 +111,12 @@ object Origami extends App {
     def pred(x: A): A
   }
 
-  def range[A: Ord: Enum](from: A, to: A): List[A] = {
-    def f(x: A): Maybe[(A, A)] =
-      if (implicitly[Ord[A]].compare(to, x) == LT) Nada
-      else Just((x, implicitly[Enum[A]].succ(x)))
-    unfoldL(f, from)
-  }
+  def rangeNext[A: Ord: Enum](to: A)(x: A): Maybe[(A, A)] =
+    if (implicitly[Ord[A]].compare(to, x) == LT) Nada
+    else Just((x, implicitly[Enum[A]].succ(x)))
+
+  def range[A: Ord: Enum](from: A, to: A): List[A] =
+    unfoldL(rangeNext(to), from)
 
   implicit object IntEnum extends Enum[Int] {
     def succ(x: Int): Int = x + 1
@@ -124,5 +124,16 @@ object Origami extends App {
   }
 
   println(range(1,10))
+
+  ////////////////////////////////////////////////////////////////////
+  // Unfolds using StateT
+
+  def rangeNextStateT[A: Ord: Enum](to: A): StateT[Maybe,A,A] =
+    StateT { x: A => rangeNext(to)(x) }
+
+  def rangeStateT[A: Ord: Enum](from: A, to: A): List[A] =
+    unfoldL({ x: A => rangeNextStateT(to).run(x) }, from)
+
+  println(rangeStateT(1,10))
 
 }
