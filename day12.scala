@@ -91,6 +91,7 @@ object Origami extends App {
       else EQ
   }
 
+  // Cons(1,Cons(2,Cons(3,Cons(4,Nil))))
   println(isort(Cons(4,Cons(3,Cons(2,Cons(1, Nil))))))
 
   ////////////////////////////////////////////////////////////////////
@@ -123,6 +124,7 @@ object Origami extends App {
     def pred(x: Int): Int = x - 1
   }
 
+  // Cons(1,Cons(2,Cons(3,Cons(4,Cons(5,Cons(6,Cons(7,Cons(8,Cons(9,...
   println(range(1,10))
 
   ////////////////////////////////////////////////////////////////////
@@ -134,6 +136,7 @@ object Origami extends App {
   def rangeStateT[A: Ord: Enum](from: A, to: A): List[A] =
     unfoldL({ x: A => rangeNextStateT(to).run(x) }, from)
 
+  // Cons(1,Cons(2,Cons(3,Cons(4,Cons(5,Cons(6,Cons(7,Cons(8,Cons(9,...
   println(rangeStateT(1,10))
 
 }
